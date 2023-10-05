@@ -1,9 +1,174 @@
+1번 
+창의성,협업,소통능력,문제 해결능력, 시스템적 사고
+2번
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+ESP8266WebServer server(80);
+
+const int relayPin = D1; // 사용할 핀 번호에 따라 변경
+
+void setup() {
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW); // 초기에 릴레이를 끈 상태로 설정
+  
+  Serial.begin(115200);
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/on", HTTP_GET, handleOn);
+  server.on("/off", HTTP_GET, handleOff);
+
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}
+
+void handleRoot() {
+  server.send(200, "text/html", "Welcome to the Smart Home Control");
+}
+
+void handleOn() {
+  digitalWrite(relayPin, HIGH); // 릴레이를 켬
+  server.send(200, "text/html", "Light is ON");
+}
+
+void handleOff() {
+  digitalWrite(relayPin, LOW); // 릴레이를 끔
+  server.send(200, "text/html", "Light is OFF");
+}
+//전등에 와이파이 모듈을 연결하고 스마트폰 앱이나 브라우저로 /on 및 /off 엔드포인트에 접속하면 전등을 켜고 끌 수 있습니다.
+
+
+
+3번
+아두이노 코
+void setup() {
+  Serial.begin(9600);
+  pinMode(7, INPUT_PULLUP);
+}
+
+void loop() {
+  int buttonState = digitalRead(7);
+
+  if (buttonState == LOW) {
+    Serial.println("0");
+  } else { // 버튼이 떼졌을 때
+    Serial.println("1");
+  }
+
+  delay(100);
+}
+import processing.serial.*;
+Serial p;
 void setup(){
-  pinMode(3, OUTPUT);
+  size(400,400);
+  p = new Serial(this,"COM3", 9600);
 }
-void loop(){
-  digitalWrite(3, HIGH);
-  delay(250);
-  digitalWrite(3, LOW);
-  delay(250);
+void draw(){
+  if(p.available()>0){
+    String m = p.readStringUntil('\n');
+    if(m != null){
+       print(m);
+       if(m.indexOf('1')==0) background(0,255,0);
+       if(m.indexOf('0')==0) background(0,0,0);
+    }
+  }
 }
+
+4번
+//프로세싱 코드
+import processing.net.*;
+
+Server server;
+int port = 12345;  // 포트 번호 설정
+int bgColor = 255;  // 초기 배경색 (흰색)
+
+void setup() {
+  size(400, 400);
+  background(bgColor);
+  server = new Server(this, port);  // 포트 설정
+}
+
+void draw() {
+  // 아무것도 안해도 됩니다.
+}
+
+void serverEvent(Server s, Client c) {
+  String data = c.readString();  // 클라이언트로부터 데이터 수신
+  data = data.trim();  // 공백 제거
+  
+  if (data.equals("1")) {
+    bgColor = color(0, 0, 255);  // 파란색
+  } else if (data.equals("2")) {
+    bgColor = color(255, 0, 0);  // 빨간색
+  }
+  
+  background(bgColor);  // 배경색 변경
+}
+
+//앱인벤터
+when Button1.Click
+do call Web1. PostText
+text "1"
+when Button2.Click
+do call Web1. PostText
+text "2"
+
+5번.
+아두이노
+#include <Servo.h>
+
+Servo myservo;
+int ledPin = 7; // LED 연결 핀
+int speakerPin = 4; // 피에조 스피커 연결 핀
+int buttonState = 0;
+int note = 0;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(speakerPin, OUTPUT);
+  myservo.attach(9);
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int command = Serial.parseInt(); // 스마트폰으로부터 숫자를 읽음
+    if (command == 1) {
+      digitalWrite(ledPin, HIGH); // LED를 켬
+    } else if (command == 0) {
+      digitalWrite(ledPin, LOW); // LED를 끔
+    } else if (command >= 1 && command <= 8) {
+      playNote(command); // 피에조 스피커로 음계 재생
+    }
+  }
+}
+
+void playNote(int note) {
+  int tones[] = {262, 294, 330, 349, 392, 440, 494, 523}; // C4, D4, E4, F4, G4, A4, B4, C5
+  int duration = 500; // 음의 길이 (밀리초)
+  tone(speakerPin, tones[note - 1], duration);
+  delay(duration);
+  noTone(speakerPin);
+}
+앱인벤터
+Web1.Url = "http://YOUR_ARDUINO_IP_OR_HOSTNAME/?data=1"
+Web1.Get()
+Web1.Url = "http://YOUR_ARDUINO_IP_OR_HOSTNAME/?data=0"
+Web1.Get()
+Web1.Url = "http://YOUR_ARDUINO_IP_OR_HOSTNAME/?data=" + TextBox1.Text
+Web1.Get()
